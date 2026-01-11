@@ -1,1 +1,601 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Markdown Deck</title>
 
+  <!-- Markdown renderer -->
+  <script src="https://unpkg.com/marked@14.1.4/marked.min.js"></script>
+
+  <!-- Code highlighting -->
+  <script src="https://unpkg.com/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+
+  <style>
+    :root{
+      --bg:#ffffff;
+      --page:#f3f4f6;
+      --panel:#ffffff;
+      --text:#111827;
+      --muted:#4b5563;
+      --border:#e5e7eb;
+      --shadow:0 10px 28px rgba(17,24,39,.08);
+      --r1:16px;
+      --r2:12px;
+      --maxw:1200px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:var(--bg);
+      color:var(--text);
+      overflow:hidden;
+    }
+
+    header{
+      position:fixed; inset:0 0 auto 0;
+      height:64px;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 16px; gap:12px;
+      background:rgba(255,255,255,.92);
+      border-bottom:1px solid var(--border);
+      z-index:10;
+    }
+    .h-left,.h-right{display:flex; align-items:center; gap:10px; min-width:240px;}
+    .h-center{flex:1; display:flex; justify-content:center; min-width:0;}
+    .deck-title{display:flex; flex-direction:column; line-height:1.15;}
+    .deck-title b{font-size:14px; letter-spacing:.2px;}
+    .deck-title span{font-size:12px; color:var(--muted);}
+    .slide-title{
+      max-width:min(860px, 90vw);
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      font-size:14px; color:var(--muted);
+    }
+
+    button{
+      appearance:none;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      border-radius:999px;
+      padding:10px 12px;
+      cursor:pointer;
+      transition:transform .08s ease, background .15s ease, border-color .15s ease;
+      user-select:none;
+    }
+    button:hover{background:#f9fafb; border-color:#d1d5db;}
+    button:active{transform:scale(.98);}
+    .icon-btn{width:42px; height:42px; display:grid; place-items:center; font-size:16px; padding:0;}
+    #counter{font-size:12px; color:var(--muted); padding:0 6px; white-space:nowrap;}
+
+    #layout{
+      position:fixed; inset:64px 0 0 0;
+      display:grid;
+      grid-template-columns:0px 1fr;
+      transition:grid-template-columns .18s ease;
+    }
+    body.sidebar-open #layout{grid-template-columns:360px 1fr;}
+
+    aside{
+      border-right:1px solid var(--border);
+      background:#fff;
+      overflow:hidden;
+    }
+    .aside-inner{height:100%; display:flex; flex-direction:column; padding:14px; gap:10px;}
+    .search{
+      display:flex; gap:10px; align-items:center;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:#fff;
+    }
+    .search input{
+      width:100%;
+      border:none; outline:none;
+      background:transparent;
+      color:var(--text);
+      font-size:13px;
+    }
+    .search input::placeholder{color:#9ca3af}
+    #slideList{overflow:auto; padding-right:6px;}
+    .slide-link{
+      width:100%;
+      text-align:left;
+      border-radius:12px;
+      padding:10px 12px;
+      margin-bottom:8px;
+      background:#fff;
+    }
+    .slide-link.active{background:#eef2ff; border-color:#c7d2fe;}
+
+    main{
+      overflow:auto;
+      padding:18px 16px 28px;
+      background:var(--page);
+    }
+    .slide{
+      max-width:var(--maxw);
+      margin:0 auto;
+      padding:30px 34px 26px;
+      border-radius:var(--r1);
+      background:var(--panel);
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+    }
+
+    /* Markdown styling */
+    .slide :where(h1,h2,h3){
+      margin:.25em 0 .55em;
+      line-height:1.15;
+      letter-spacing:.2px;
+      color:#0f172a;
+    }
+    .slide h1{font-size:clamp(30px, 3.0vw, 48px); margin-top:0;}
+    .slide h2{font-size:clamp(22px, 2.1vw, 30px);}
+    .slide h3{font-size:19px;}
+
+    .slide p,.slide li{font-size:18px; line-height:1.65; color:var(--text);}
+    .slide :where(ul,ol){padding-left:1.25em; margin:.5em 0 1em;}
+    .slide li{margin:.25em 0;}
+
+    .slide :not(pre)>code{
+      font-family:var(--mono);
+      font-size:.95em;
+      background:#f3f4f6;
+      padding:.16em .35em;
+      border-radius:10px;
+      border:1px solid #e5e7eb;
+    }
+    .slide pre{
+      position:relative;
+      overflow:auto;
+      border-radius:var(--r2);
+      border:1px solid #e5e7eb;
+      background:#f8fafc;
+      padding:14px 14px 12px;
+      margin:16px 0 18px;
+      box-shadow:0 8px 18px rgba(17,24,39,.06);
+    }
+    .slide pre code{
+      font-family:var(--mono);
+      font-size:15px;
+      line-height:1.55;
+      display:block;
+    }
+    .copy-btn{
+      position:absolute;
+      top:10px; right:10px;
+      border-radius:999px;
+      padding:7px 10px;
+      font-size:12px;
+      background:#fff;
+    }
+
+    .slide table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius:var(--r2);
+      border:1px solid #e5e7eb;
+      margin:14px 0 18px;
+      background:#fff;
+    }
+    .slide th,.slide td{
+      padding:10px 12px;
+      border-bottom:1px solid #eef2f7;
+      text-align:left;
+      vertical-align:top;
+      font-size:15px;
+    }
+    .slide th{background:#f9fafb; color:#111827; font-weight:650;}
+    .slide blockquote{
+      margin:14px 0;
+      padding:12px 14px;
+      border-left:4px solid #6366f1;
+      background:#eef2ff;
+      border-radius:12px;
+      color:#111827;
+    }
+    .slide hr{border:none; border-top:1px solid #e5e7eb; margin:18px 0;}
+
+    footer{
+      position:fixed; inset:auto 0 0 0;
+      height:12px;
+      background:#fff;
+      border-top:1px solid var(--border);
+      z-index:9;
+    }
+    #progressBar{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg, #6366f1, #22c55e, #ec4899);
+      transition:width .18s ease;
+    }
+
+    /* Drop overlay */
+    #dropOverlay{
+      position:fixed;
+      inset:64px 0 12px 0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(17,24,39,.08);
+      backdrop-filter: blur(2px);
+      z-index:50;
+    }
+    #dropOverlay .box{
+      width:min(720px, 92vw);
+      background:#fff;
+      border:2px dashed #cbd5e1;
+      border-radius:18px;
+      padding:22px 18px;
+      text-align:center;
+      box-shadow:var(--shadow);
+    }
+    #dropOverlay .box b{display:block; font-size:18px; margin-bottom:6px;}
+    #dropOverlay .box span{color:var(--muted);}
+
+    /* Empty state */
+    .empty{
+      border:2px dashed #cbd5e1;
+      background:#fff;
+      padding:26px 22px;
+      border-radius:18px;
+      text-align:center;
+    }
+    .empty b{display:block; font-size:18px; margin-bottom:6px;}
+    .empty span{color:var(--muted);}
+
+    @media (max-width: 900px){
+      .h-left,.h-right{min-width:unset}
+      body.sidebar-open #layout{grid-template-columns:1fr}
+      aside{
+        position:fixed;
+        top:64px; left:0; bottom:12px;
+        width:min(92vw, 360px);
+        transform:translateX(-110%);
+        transition:transform .18s ease;
+        z-index:20;
+      }
+      body.sidebar-open aside{transform:translateX(0%)}
+      main{padding:14px 12px 26px}
+      .slide{padding:20px 16px 16px}
+      .slide p,.slide li{font-size:17px}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="h-left">
+    <button class="icon-btn" id="btnMenu" title="Menu (Esc)">☰</button>
+    <div class="deck-title">
+      <b>Markdown Deck</b>
+      <span id="subtitle">Open or drop a .md file</span>
+    </div>
+  </div>
+
+  <div class="h-center">
+    <div class="slide-title" id="slideTitle">—</div>
+  </div>
+
+  <div class="h-right">
+    <input id="fileInput" type="file" accept=".md,text/markdown" style="display:none" />
+    <button id="btnOpen" title="Open markdown file">Open .md</button>
+    <button class="icon-btn" id="btnPrev" title="Previous (←)">←</button>
+    <button class="icon-btn" id="btnNext" title="Next (→)">→</button>
+    <div id="counter">0 / 0</div>
+  </div>
+</header>
+
+<div id="layout">
+  <aside>
+    <div class="aside-inner">
+      <div class="search">
+        <span style="color:#6b7280;">🔎</span>
+        <input id="search" placeholder="Search slide…" />
+      </div>
+      <div id="slideList"></div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="slide" id="slide">
+      <div class="empty">
+        <b>No markdown loaded</b>
+        <span>Click “Open .md” or drag & drop a markdown file into this page.</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="dropOverlay">
+  <div class="box">
+    <b>Drop your markdown file</b>
+    <span>Release to load the presentation.</span>
+  </div>
+</div>
+
+<footer><div id="progressBar"></div></footer>
+
+<script>
+  // --------- Utilities ---------
+  function escapeHtml(s){
+    return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  }
+
+  // Split markdown into slides by H1, ignoring headings inside fenced code blocks.
+  // Supports both ``` and ~~~ fences (3+ chars), and avoids false splits inside fences.
+  function splitSlides(md) {
+    const lines = md.replace(/\r\n/g, "\n").split("\n");
+    const slides = [];
+    let cur = [];
+    let inFence = false;
+    let fenceChar = null; // '`' or '~'
+    let fenceLen = 0;
+
+    function fenceMatch(line){
+      const m = line.match(/^\s*([`~]{3,})(.*)$/);
+      if(!m) return null;
+      const fence = m[1];
+      return { fence, ch: fence[0], len: fence.length };
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      const fm = fenceMatch(line);
+      if (fm) {
+        if (!inFence) {
+          inFence = true; fenceChar = fm.ch; fenceLen = fm.len;
+        } else {
+          // close only if same char and length >= opening
+          if (fm.ch === fenceChar && fm.len >= fenceLen) {
+            inFence = false; fenceChar = null; fenceLen = 0;
+          }
+        }
+        cur.push(line);
+        continue;
+      }
+
+      if (!inFence && /^#\s+/.test(line)) {
+        if (cur.length) slides.push(cur.join("\n").trim());
+        cur = [line];
+      } else {
+        cur.push(line);
+      }
+    }
+    if (cur.length) slides.push(cur.join("\n").trim());
+    return slides.filter(s => s.length > 0);
+  }
+
+  // --------- State ---------
+  let slidesMd = [];
+  let titles = [];
+  let current = 0;
+  let deckLoaded = false;
+
+  // --------- Markdown renderer ---------
+  marked.setOptions({
+    gfm: true,
+    breaks: false,
+    langPrefix: "language-" // important for highlight.js language detection
+  });
+
+  function updateProgress(){
+    const pct = slidesMd.length ? ((current + 1) / slidesMd.length) * 100 : 0;
+    document.getElementById("progressBar").style.width = pct + "%";
+  }
+
+  function highlightCode(){
+    if (!window.hljs) return;
+    document.querySelectorAll("#slide pre code").forEach((el) => {
+      try{
+        hljs.highlightElement(el); // highlight.js handles language-xxx classes and auto-detect as fallback
+      }catch(e){
+        // ignore highlighting errors; keep readable code blocks
+      }
+    });
+  }
+
+  function installCopyButtons(){
+    document.querySelectorAll("#slide pre").forEach(pre => {
+      if (pre.querySelector(".copy-btn")) return;
+      const codeEl = pre.querySelector("code");
+      if (!codeEl) return;
+
+      const btn = document.createElement("button");
+      btn.className = "copy-btn";
+      btn.textContent = "Copy";
+      btn.addEventListener("click", async () => {
+        try{
+          await navigator.clipboard.writeText(codeEl.textContent);
+          btn.textContent = "Copied";
+          setTimeout(() => btn.textContent = "Copy", 900);
+        }catch{
+          btn.textContent = "Failed";
+          setTimeout(() => btn.textContent = "Copy", 900);
+        }
+      });
+      pre.appendChild(btn);
+    });
+  }
+
+  function buildList(filter = ""){
+    const slideListEl = document.getElementById("slideList");
+    slideListEl.innerHTML = "";
+    const f = (filter || "").trim().toLowerCase();
+
+    titles.forEach((t, idx) => {
+      const label = `${idx+1}. ${t}`;
+      if (f && !label.toLowerCase().includes(f)) return;
+
+      const btn = document.createElement("button");
+      btn.className = "slide-link";
+      btn.textContent = label;
+      btn.addEventListener("click", () => {
+        go(idx);
+        toggleSidebar(false);
+      });
+      slideListEl.appendChild(btn);
+    });
+  }
+
+  function render(){
+    const slideEl = document.getElementById("slide");
+    if (!deckLoaded || !slidesMd.length){
+      slideEl.innerHTML = `
+        <div class="empty">
+          <b>No markdown loaded</b>
+          <span>Click “Open .md” or drag & drop a markdown file into this page.</span>
+        </div>`;
+      document.getElementById("slideTitle").textContent = "—";
+      document.getElementById("counter").textContent = "0 / 0";
+      document.getElementById("subtitle").textContent = "Open or drop a .md file";
+      updateProgress();
+      buildList("");
+      return;
+    }
+
+    slideEl.innerHTML = marked.parse(slidesMd[current]);
+    document.getElementById("slideTitle").textContent = titles[current] || `Slide ${current+1}`;
+    document.getElementById("counter").textContent = `${current+1} / ${slidesMd.length}`;
+    document.getElementById("subtitle").textContent = `${slidesMd.length} slides loaded`;
+    updateProgress();
+    installCopyButtons();
+    highlightCode();
+
+    document.querySelectorAll(".slide-link").forEach((el, idx) => {
+      el.classList.toggle("active", idx === current);
+    });
+
+    history.replaceState(null, "", "#" + (current + 1));
+  }
+
+  function go(n){
+    if(!deckLoaded) return;
+    current = Math.max(0, Math.min(slidesMd.length - 1, n));
+    render();
+  }
+
+  // --------- Sidebar & controls ---------
+  function toggleSidebar(force){
+    const open = (typeof force === "boolean") ? force : !document.body.classList.contains("sidebar-open");
+    document.body.classList.toggle("sidebar-open", open);
+  }
+
+  document.getElementById("btnMenu").addEventListener("click", () => toggleSidebar());
+  document.getElementById("btnPrev").addEventListener("click", () => go(current - 1));
+  document.getElementById("btnNext").addEventListener("click", () => go(current + 1));
+
+  document.getElementById("search").addEventListener("input", (e) => buildList(e.target.value));
+
+  document.addEventListener("keydown", (e) => {
+    const k = e.key;
+    if (k === "ArrowRight" || k === "PageDown" || k === " ") { e.preventDefault(); go(current + 1); }
+    if (k === "ArrowLeft" || k === "PageUp") { e.preventDefault(); go(current - 1); }
+    if (k === "Home") { e.preventDefault(); go(0); }
+    if (k === "End") { e.preventDefault(); go(slidesMd.length - 1); }
+    if (k === "Escape") { toggleSidebar(false); }
+  });
+
+  // Touch swipe
+  let startX = null;
+  document.getElementById("slide").addEventListener("touchstart", (e) => { startX = e.touches[0].clientX; }, { passive:true });
+  document.getElementById("slide").addEventListener("touchend", (e) => {
+    if (startX == null) return;
+    const endX = e.changedTouches[0].clientX;
+    const dx = endX - startX;
+    if (Math.abs(dx) > 60) (dx < 0) ? go(current + 1) : go(current - 1);
+    startX = null;
+  }, { passive:true });
+
+  // --------- Loading markdown from a file ---------
+  function loadMarkdownText(markdownText, filename = "markdown"){
+    slidesMd = splitSlides(markdownText);
+    titles = slidesMd.map((s, idx) => {
+      const m = s.match(/^#\s+(.+)$/m);
+      return m ? m[1].trim() : `Slide ${idx+1}`;
+    });
+
+    deckLoaded = true;
+    current = 0;
+
+    // build list first for active state
+    buildList("");
+    // init from hash if present
+    if (location.hash) {
+      const n = parseInt(location.hash.replace("#",""), 10);
+      if (!Number.isNaN(n)) current = Math.max(0, Math.min(slidesMd.length - 1, n - 1));
+    }
+
+    render();
+    document.title = `Markdown Deck — ${filename}`;
+  }
+
+  // File picker
+  const fileInput = document.getElementById("fileInput");
+  document.getElementById("btnOpen").addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    loadMarkdownText(text, file.name);
+    // reset to allow re-picking same file
+    fileInput.value = "";
+  });
+
+  // Drag & drop
+  const overlay = document.getElementById("dropOverlay");
+  function showOverlay(show){ overlay.style.display = show ? "flex" : "none"; }
+
+  window.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    showOverlay(true);
+  });
+  window.addEventListener("dragleave", (e) => {
+    // if leaving window
+    if (e.target === document.documentElement) showOverlay(false);
+  });
+  window.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    showOverlay(false);
+
+    const file = e.dataTransfer?.files?.[0];
+    if (!file) return;
+    const name = (file.name || "").toLowerCase();
+    if (!name.endsWith(".md") && file.type !== "text/markdown" && file.type !== "text/plain") {
+      alert("Please drop a .md (markdown) file.");
+      return;
+    }
+    const text = await file.text();
+    loadMarkdownText(text, file.name);
+  });
+
+  // Optional: fetch markdown via URL query (?src=slides.md). Works when served via http(s).
+  async function tryFetchFromQuery(){
+    const p = new URLSearchParams(location.search);
+    const src = p.get("src");
+    if(!src) return;
+    try{
+      const res = await fetch(src, { cache: "no-store" });
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      const text = await res.text();
+      loadMarkdownText(text, src.split("/").pop() || src);
+    }catch(err){
+      console.warn("Failed to fetch src:", err);
+    }
+  }
+
+  buildList("");
+  render();
+  tryFetchFromQuery();
+</script>
+
+</body>
+</html>
