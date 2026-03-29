@@ -211,6 +211,8 @@
       overflow: auto;
       padding: clamp(28px, 4%, 52px) clamp(32px, 5%, 64px);
       position: relative;
+      /* Reset inherited body color so all slide content defaults to dark text on white */
+      color: #0f172a;
       width: min(100%, calc((100vh - var(--header-h) - var(--footer-h) - 56px) * (16/9)));
       aspect-ratio: 16 / 9;
       animation: slideIn .2s cubic-bezier(.4,0,.2,1);
