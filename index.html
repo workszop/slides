@@ -12,561 +12,714 @@
   <script src="https://unpkg.com/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/@highlightjs/cdn-assets@11.9.0/styles/atom-one-dark.min.css">
 
-
   <style>
-    :root{
-      --bg:#ffffff;
-      --page:#f3f4f6;
-      --panel:#ffffff;
-      --text:#111827;
-      --muted:#4b5563;
-      --border:#e5e7eb;
-      --shadow:0 10px 28px rgba(17,24,39,.08);
-      --r1:16px;
-      --r2:12px;
-      --maxw:1200px;
-      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    :root {
+      --accent: #6366f1;
+      --accent-2: #8b5cf6;
+      --header-bg: #0f111a;
+      --header-border: rgba(255,255,255,.08);
+      --stage-bg: #181a24;
+      --slide-bg: #ffffff;
+      --slide-shadow: 0 32px 80px rgba(0,0,0,.55), 0 8px 24px rgba(0,0,0,.35);
+      --sidebar-bg: #13151f;
+      --sidebar-border: rgba(255,255,255,.07);
+      --text: #111827;
+      --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family:var(--font);
-      background:var(--bg);
-      color:var(--text);
-      overflow:hidden;
+      --header-h: 56px;
+      --footer-h: 3px;
+      --r: 14px;
     }
 
-    header{
-      position:fixed; inset:0 0 auto 0;
-      height:64px;
-      display:flex; align-items:center; justify-content:space-between;
-      padding:0 16px; gap:12px;
-      background:rgba(255,255,255,.92);
-      border-bottom:1px solid var(--border);
-      z-index:10;
-    }
-    .h-left,.h-right{display:flex; align-items:center; gap:10px; min-width:240px;}
-    .h-center{flex:1; display:flex; justify-content:center; min-width:0;}
-    .deck-title{display:flex; flex-direction:column; line-height:1.15;}
-    .deck-title b{font-size:14px; letter-spacing:.2px;}
-    .deck-title span{font-size:12px; color:var(--muted);}
-    .slide-title{
-      max-width:min(860px, 90vw);
-      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-      font-size:14px; color:var(--muted);
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: var(--font);
+      background: var(--stage-bg);
+      color: #e2e8f0;
     }
 
-    button{
-      appearance:none;
-      border:1px solid var(--border);
-      background:#fff;
-      color:var(--text);
-      border-radius:999px;
-      padding:10px 12px;
-      cursor:pointer;
-      transition:transform .08s ease, background .15s ease, border-color .15s ease;
-      user-select:none;
-    }
-    button:hover{background:#f9fafb; border-color:#d1d5db;}
-    button:active{transform:scale(.98);}
-    .icon-btn{width:42px; height:42px; display:grid; place-items:center; font-size:16px; padding:0;}
-    #counter{font-size:12px; color:var(--muted); padding:0 6px; white-space:nowrap;}
-
-    #layout{
-      position:fixed; inset:64px 0 0 0;
-      display:grid;
-      grid-template-columns:0px 1fr;
-      transition:grid-template-columns .18s ease;
-    }
-    body.sidebar-open #layout{grid-template-columns:360px 1fr;}
-
-    aside{
-      border-right:1px solid var(--border);
-      background:#fff;
-      overflow:hidden;
-    }
-    .aside-inner{height:100%; display:flex; flex-direction:column; padding:14px; gap:10px;}
-    .search{
-      display:flex; gap:10px; align-items:center;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:#fff;
-    }
-    .search input{
-      width:100%;
-      border:none; outline:none;
-      background:transparent;
-      color:var(--text);
-      font-size:13px;
-    }
-    .search input::placeholder{color:#9ca3af}
-    #slideList{overflow:auto; padding-right:6px;}
-    .slide-link{
-      width:100%;
-      text-align:left;
-      border-radius:12px;
-      padding:10px 12px;
-      margin-bottom:8px;
-      background:#fff;
-    }
-    .slide-link.active{background:#eef2ff; border-color:#c7d2fe;}
-
-    main{
-      overflow:auto;
-      padding:18px 16px 28px;
-      background:var(--page);
-    }
-    .slide{
-      max-width:var(--maxw);
-      margin:0 auto;
-      padding:30px 34px 26px;
-      border-radius:var(--r1);
-      background:var(--panel);
-      border:1px solid var(--border);
-      box-shadow:var(--shadow);
+    /* ─── Header ─────────────────────────────────────────── */
+    header {
+      position: fixed; inset: 0 0 auto 0;
+      height: var(--header-h);
+      display: flex; align-items: center; gap: 8px;
+      padding: 0 12px;
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--header-border);
+      z-index: 30;
     }
 
-    /* Markdown styling */
-    .slide :where(h1,h2,h3){
-      margin:.25em 0 .55em;
-      line-height:1.15;
-      letter-spacing:.2px;
-      color:#0f172a;
+    .h-brand {
+      display: flex; align-items: center; gap: 9px;
+      min-width: 0; flex-shrink: 0;
     }
-    .slide h1{font-size:clamp(30px, 3.0vw, 48px); margin-top:0;}
-    .slide h2{font-size:clamp(22px, 2.1vw, 30px);}
-    .slide h3{font-size:19px;}
+    .h-logo {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .h-logo svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .h-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+    .h-brand-text b { font-size: 13px; font-weight: 600; color: #f1f5f9; letter-spacing: .1px; }
+    .h-brand-text span { font-size: 11px; color: #64748b; }
 
-    .slide p,.slide li{font-size:18px; line-height:1.65; color:var(--text);}
-    .slide :where(ul,ol){padding-left:1.25em; margin:.5em 0 1em;}
-    .slide li{margin:.25em 0;}
+    .h-divider { width: 1px; height: 24px; background: var(--header-border); flex-shrink: 0; margin: 0 4px; }
 
-    .slide :not(pre)>code{
-      font-family:var(--mono);
-      font-size:.95em;
-      background:#f3f4f6;
-      padding:.16em .35em;
-      border-radius:10px;
-      border:1px solid #e5e7eb;
-    }
-    .slide pre{
-      position:relative;
-      overflow:auto;
-      border-radius:var(--r2);
-      border:1px solid #e5e7eb;
-      background:#f8fafc;
-      padding:14px 14px 12px;
-      margin:16px 0 18px;
-      box-shadow:0 8px 18px rgba(17,24,39,.06);
-    }
-    .slide pre code{
-      font-family:var(--mono);
-      font-size:18px;
-      line-height:1.55;
-      display:block;
-    }
-    .copy-btn{
-      position:absolute;
-      top:10px; right:10px;
-      border-radius:999px;
-      padding:7px 10px;
-      font-size:12px;
-      background:#fff;
+    .h-slide-title {
+      flex: 1; min-width: 0;
+      font-size: 13px; color: #94a3b8;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      padding: 0 8px;
     }
 
-    .slide table{
-      width:100%;
-      border-collapse:collapse;
-      overflow:hidden;
-      border-radius:var(--r2);
-      border:1px solid #e5e7eb;
-      margin:14px 0 18px;
-      background:#fff;
-    }
-    .slide th,.slide td{
-      padding:10px 12px;
-      border-bottom:1px solid #eef2f7;
-      text-align:left;
-      vertical-align:top;
-      font-size:15px;
-    }
-    .slide th{background:#f9fafb; color:#111827; font-weight:650;}
-    .slide blockquote{
-      margin:14px 0;
-      padding:12px 14px;
-      border-left:4px solid #6366f1;
-      background:#eef2ff;
-      border-radius:12px;
-      color:#111827;
-    }
-    .slide hr{border:none; border-top:1px solid #e5e7eb; margin:18px 0;}
+    .h-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 
-    footer{
-      position:fixed; inset:auto 0 0 0;
-      height:12px;
-      background:#fff;
-      border-top:1px solid var(--border);
-      z-index:9;
+    /* Buttons */
+    .btn {
+      appearance: none; border: none; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      font-family: var(--font); font-size: 13px; font-weight: 500;
+      border-radius: 8px;
+      transition: background .12s, color .12s, transform .08s;
+      user-select: none; white-space: nowrap;
     }
-    #progressBar{
-      height:100%;
-      width:0%;
-      background:linear-gradient(90deg, #6366f1, #22c55e, #ec4899);
-      transition:width .18s ease;
+    .btn:active { transform: scale(.96); }
+
+    .btn-ghost {
+      background: transparent; color: #94a3b8;
+      padding: 7px 9px;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,.07); color: #e2e8f0; }
+
+    .btn-pill {
+      background: rgba(255,255,255,.07); color: #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.1);
+    }
+    .btn-pill:hover { background: rgba(255,255,255,.12); color: #f1f5f9; border-color: rgba(255,255,255,.18); }
+
+    .btn-icon { width: 34px; height: 34px; padding: 0; border-radius: 8px; flex-shrink: 0; }
+    .btn-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+
+    .btn-nav {
+      width: 34px; height: 34px; padding: 0;
+      background: rgba(255,255,255,.07); color: #94a3b8;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px; flex-shrink: 0;
+    }
+    .btn-nav:hover:not(:disabled) { background: rgba(255,255,255,.13); color: #e2e8f0; border-color: rgba(255,255,255,.18); }
+    .btn-nav:disabled { opacity: .3; cursor: default; }
+    .btn-nav svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+
+    .counter-pill {
+      font-size: 12px; color: #64748b; font-weight: 500;
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 999px; padding: 4px 10px;
+      white-space: nowrap; flex-shrink: 0;
     }
 
-    /* Drop overlay */
-    #dropOverlay{
-      position:fixed;
-      inset:64px 0 12px 0;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      background:rgba(17,24,39,.08);
-      backdrop-filter: blur(2px);
-      z-index:50;
+    /* ─── Layout ──────────────────────────────────────────── */
+    #layout {
+      position: fixed;
+      inset: var(--header-h) 0 var(--footer-h) 0;
+      display: grid;
+      grid-template-columns: 0px 1fr;
+      transition: grid-template-columns .2s cubic-bezier(.4,0,.2,1);
     }
-    #dropOverlay .box{
-      width:min(720px, 92vw);
-      background:#fff;
-      border:2px dashed #cbd5e1;
-      border-radius:18px;
-      padding:22px 18px;
-      text-align:center;
-      box-shadow:var(--shadow);
+    body.sidebar-open #layout { grid-template-columns: 280px 1fr; }
+
+    /* ─── Sidebar ─────────────────────────────────────────── */
+    aside {
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--sidebar-border);
+      overflow: hidden;
     }
-    #dropOverlay .box b{display:block; font-size:18px; margin-bottom:6px;}
-    #dropOverlay .box span{color:var(--muted);}
+    .aside-inner {
+      height: 100%; display: flex; flex-direction: column;
+      padding: 12px; gap: 10px;
+    }
+    .search-box {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px; padding: 8px 12px;
+      transition: border-color .15s, background .15s;
+    }
+    .search-box:focus-within { border-color: var(--accent); background: rgba(99,102,241,.06); }
+    .search-box svg { width: 14px; height: 14px; fill: none; stroke: #64748b; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+    .search-box input {
+      width: 100%; border: none; outline: none;
+      background: transparent; color: #e2e8f0;
+      font-size: 13px; font-family: var(--font);
+    }
+    .search-box input::placeholder { color: #475569; }
+
+    #slideList { overflow-y: auto; flex: 1; padding-right: 2px; display: flex; flex-direction: column; gap: 4px; }
+    #slideList::-webkit-scrollbar { width: 4px; }
+    #slideList::-webkit-scrollbar-track { background: transparent; }
+    #slideList::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
+
+    .slide-link {
+      width: 100%; text-align: left;
+      background: transparent; color: #94a3b8;
+      border: 1px solid transparent;
+      border-radius: 9px; padding: 9px 11px;
+      font-size: 12.5px; font-family: var(--font); line-height: 1.4;
+      cursor: pointer; transition: background .12s, color .12s, border-color .12s;
+      display: flex; align-items: baseline; gap: 8px;
+    }
+    .slide-link:hover { background: rgba(255,255,255,.06); color: #e2e8f0; }
+    .slide-link.active {
+      background: rgba(99,102,241,.15); color: #a5b4fc;
+      border-color: rgba(99,102,241,.3);
+    }
+    .slide-link .snum {
+      font-size: 10px; font-weight: 600; color: #475569; flex-shrink: 0;
+      background: rgba(255,255,255,.05); border-radius: 4px; padding: 1px 5px;
+      min-width: 24px; text-align: center;
+    }
+    .slide-link.active .snum { color: #818cf8; background: rgba(99,102,241,.2); }
+
+    /* ─── Stage & Slide ───────────────────────────────────── */
+    main {
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      padding: 28px;
+      background: var(--stage-bg);
+      position: relative;
+    }
+
+    main::before {
+      content: ''; pointer-events: none;
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(99,102,241,.07) 0%, transparent 70%);
+    }
+
+    .slide-stage {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* 16:9 slide that scales to fill available space */
+    #slide {
+      background: var(--slide-bg);
+      border-radius: var(--r);
+      border: 1px solid rgba(0,0,0,.08);
+      box-shadow: var(--slide-shadow);
+      overflow: auto;
+      padding: clamp(28px, 4%, 52px) clamp(32px, 5%, 64px);
+      position: relative;
+      width: min(100%, calc((100vh - var(--header-h) - var(--footer-h) - 56px) * (16/9)));
+      aspect-ratio: 16 / 9;
+      animation: slideIn .2s cubic-bezier(.4,0,.2,1);
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px) scale(.992); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Slide content typography */
+    #slide :where(h1,h2,h3,h4) { line-height: 1.2; letter-spacing: -.3px; color: #0f172a; }
+    #slide h1 { font-size: clamp(26px, 3.8vw, 52px); margin-bottom: .45em; font-weight: 800; }
+    #slide h2 { font-size: clamp(19px, 2.6vw, 34px); margin-bottom: .4em; font-weight: 700; margin-top: .6em; }
+    #slide h3 { font-size: clamp(15px, 1.9vw, 24px); margin-bottom: .35em; font-weight: 600; margin-top: .5em; }
+    #slide h4 { font-size: clamp(13px, 1.4vw, 18px); margin-bottom: .3em; font-weight: 600; margin-top: .4em; }
+
+    #slide p, #slide li {
+      font-size: clamp(13px, 1.4vw, 20px);
+      line-height: 1.65; color: #1e293b;
+    }
+    #slide :where(ul,ol) { padding-left: 1.4em; margin: .4em 0 .8em; }
+    #slide li { margin: .2em 0; }
+
+    #slide :not(pre) > code {
+      font-family: var(--mono); font-size: .88em;
+      background: #f1f5f9; border: 1px solid #e2e8f0;
+      padding: .12em .38em; border-radius: 6px; color: #7c3aed;
+    }
+
+    #slide pre {
+      position: relative;
+      background: #0d1117; border: 1px solid #30363d;
+      border-radius: 10px; padding: 14px 16px 12px; margin: .8em 0;
+      overflow: auto; box-shadow: 0 4px 16px rgba(0,0,0,.15);
+    }
+    #slide pre code {
+      font-family: var(--mono);
+      font-size: clamp(11px, 1.1vw, 15px);
+      line-height: 1.55; display: block;
+      background: transparent; border: none; padding: 0; color: #e2e8f0;
+    }
+
+    .copy-btn {
+      position: absolute; top: 9px; right: 10px;
+      background: rgba(255,255,255,.08); color: #94a3b8;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 6px; padding: 4px 10px;
+      font-size: 11px; font-weight: 500; cursor: pointer;
+      font-family: var(--font);
+      transition: background .12s, color .12s;
+    }
+    .copy-btn:hover { background: rgba(255,255,255,.14); color: #e2e8f0; }
+
+    #slide table {
+      width: 100%; border-collapse: collapse;
+      border: 1px solid #e2e8f0; border-radius: 10px;
+      overflow: hidden; margin: .8em 0;
+      font-size: clamp(11px, 1.1vw, 14px);
+    }
+    #slide th, #slide td { padding: 9px 14px; border-bottom: 1px solid #f1f5f9; text-align: left; vertical-align: top; }
+    #slide th { background: #f8fafc; font-weight: 650; color: #0f172a; font-size: .92em; }
+    #slide tr:last-child td { border-bottom: none; }
+    #slide tr:hover td { background: #fafbff; }
+
+    #slide blockquote {
+      margin: .8em 0; padding: 12px 16px;
+      border-left: 3px solid var(--accent);
+      background: #f5f3ff; border-radius: 0 10px 10px 0;
+    }
+    #slide blockquote p { color: #3730a3; }
+
+    #slide hr { border: none; border-top: 1px solid #e2e8f0; margin: 1em 0; }
+    #slide img { max-width: 100%; height: auto; border-radius: 8px; }
+    #slide a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+    #slide a:hover { color: var(--accent-2); }
 
     /* Empty state */
-    .empty{
-      border:2px dashed #cbd5e1;
-      background:#fff;
-      padding:26px 22px;
-      border-radius:18px;
-      text-align:center;
+    .slide-empty {
+      height: 100%; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 16px;
+      text-align: center; color: #94a3b8;
     }
-    .empty b{display:block; font-size:18px; margin-bottom:6px;}
-    .empty span{color:var(--muted);}
+    .slide-empty-icon {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, rgba(99,102,241,.12) 0%, rgba(139,92,246,.12) 100%);
+      border: 1px solid rgba(99,102,241,.22);
+      border-radius: 16px; display: grid; place-items: center;
+    }
+    .slide-empty-icon svg { width: 24px; height: 24px; fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .slide-empty h3 { font-size: 18px; font-weight: 700; color: #334155; margin: 0; }
+    .slide-empty p { font-size: 14px; color: #94a3b8; margin: 0; max-width: 300px; line-height: 1.6; }
 
-    @media (max-width: 900px){
-      .h-left,.h-right{min-width:unset}
-      body.sidebar-open #layout{grid-template-columns:1fr}
-      aside{
-        position:fixed;
-        top:64px; left:0; bottom:12px;
-        width:min(92vw, 360px);
-        transform:translateX(-110%);
-        transition:transform .18s ease;
-        z-index:20;
+    /* ─── Progress bar ────────────────────────────────────── */
+    footer {
+      position: fixed; inset: auto 0 0 0;
+      height: var(--footer-h); z-index: 30;
+    }
+    #progressBar {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 50%, #ec4899 100%);
+      transition: width .2s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ─── Drop overlay ────────────────────────────────────── */
+    #dropOverlay {
+      position: fixed; inset: 0;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(9,11,17,.72);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+    }
+    #dropOverlay.visible { display: flex; }
+    .drop-box {
+      width: min(520px, 90vw);
+      background: #13151f; border: 2px dashed rgba(99,102,241,.45);
+      border-radius: 20px; padding: 48px 32px; text-align: center;
+      box-shadow: 0 32px 80px rgba(0,0,0,.6);
+      animation: popIn .18s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes popIn {
+      from { transform: scale(.94); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+    .drop-box-icon {
+      width: 64px; height: 64px; border-radius: 18px;
+      background: rgba(99,102,241,.15); border: 1px solid rgba(99,102,241,.3);
+      display: grid; place-items: center; margin: 0 auto 18px;
+    }
+    .drop-box-icon svg { width: 28px; height: 28px; fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .drop-box h3 { font-size: 20px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; }
+    .drop-box p { font-size: 14px; color: #64748b; }
+
+    /* ─── Keys overlay ────────────────────────────────────── */
+    #keysOverlay {
+      position: fixed; inset: 0;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(9,11,17,.72);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+    }
+    #keysOverlay.visible { display: flex; }
+    .keys-box {
+      background: #13151f; border: 1px solid rgba(255,255,255,.1);
+      border-radius: 20px; padding: 28px 32px; width: min(460px,90vw);
+      box-shadow: 0 32px 80px rgba(0,0,0,.6);
+    }
+    .keys-box h3 { font-size: 16px; font-weight: 700; color: #f1f5f9; margin-bottom: 18px; }
+    .keys-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; }
+    .key-row { display: flex; align-items: center; gap: 8px; }
+    .key-row span { font-size: 12px; color: #64748b; flex: 1; }
+    kbd {
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+      border-radius: 5px; padding: 2px 7px;
+      font-size: 11px; font-family: var(--mono); color: #cbd5e1;
+      box-shadow: 0 2px 0 rgba(0,0,0,.3);
+    }
+    .keys-close {
+      margin-top: 20px; width: 100%;
+      background: rgba(255,255,255,.07); color: #94a3b8;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 9px; padding: 9px;
+      font-family: var(--font); font-size: 13px; cursor: pointer;
+      transition: background .12s;
+    }
+    .keys-close:hover { background: rgba(255,255,255,.12); color: #e2e8f0; }
+
+    /* ─── Responsive ──────────────────────────────────────── */
+    @media (max-width: 860px) {
+      :root { --header-h: 52px; }
+      body.sidebar-open #layout { grid-template-columns: 1fr; }
+      aside {
+        position: fixed;
+        top: var(--header-h); left: 0; bottom: var(--footer-h);
+        width: min(90vw, 280px);
+        transform: translateX(-110%);
+        transition: transform .2s cubic-bezier(.4,0,.2,1);
+        z-index: 25;
       }
-      body.sidebar-open aside{transform:translateX(0%)}
-      main{padding:14px 12px 26px}
-      .slide{padding:20px 16px 16px}
-      .slide p,.slide li{font-size:17px}
+      body.sidebar-open aside { transform: translateX(0); }
+      main { padding: 16px; }
+      #slide { aspect-ratio: unset; width: 100%; height: 100%; min-height: 0; }
+    }
+
+    @media (max-width: 560px) {
+      .h-brand-text, .h-divider, .h-slide-title { display: none; }
+      main { padding: 12px; }
     }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="h-left">
-    <button class="icon-btn" id="btnMenu" title="Menu (Esc)">☰</button>
-    <div class="deck-title">
+  <button class="btn btn-ghost btn-icon" id="btnMenu" title="Slides (Esc)">
+    <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+
+  <div class="h-brand">
+    <div class="h-logo">
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+    </div>
+    <div class="h-brand-text">
       <b>Markdown Deck</b>
       <span id="subtitle">Open or drop a .md file</span>
     </div>
   </div>
 
-  <div class="h-center">
-    <div class="slide-title" id="slideTitle">—</div>
-  </div>
+  <div class="h-divider"></div>
+  <div class="h-slide-title" id="slideTitle">—</div>
 
-  <div class="h-right">
+  <div class="h-actions">
     <input id="fileInput" type="file" accept=".md,text/markdown" style="display:none" />
-    <button id="btnOpen" title="Open markdown file">Open .md</button>
-    <button class="icon-btn" id="btnPrev" title="Previous (←)">←</button>
-    <button class="icon-btn" id="btnNext" title="Next (→)">→</button>
-    <div id="counter">0 / 0</div>
+    <button class="btn btn-pill" id="btnOpen" title="Open markdown file">
+      <svg style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Open .md
+    </button>
+
+    <div class="h-divider"></div>
+
+    <button class="btn btn-nav" id="btnPrev" title="Previous (←)" disabled>
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="counter-pill" id="counter">0 / 0</div>
+    <button class="btn btn-nav" id="btnNext" title="Next (→)" disabled>
+      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+
+    <div class="h-divider"></div>
+
+    <button class="btn btn-ghost btn-icon" id="btnFullscreen" title="Fullscreen (F)">
+      <svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+    </button>
+    <button class="btn btn-ghost btn-icon" id="btnKeys" title="Keyboard shortcuts">
+      <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12"/></svg>
+    </button>
   </div>
 </header>
 
 <div id="layout">
   <aside>
     <div class="aside-inner">
-      <div class="search">
-        <span style="color:#6b7280;">🔎</span>
-        <input id="search" placeholder="Search slide…" />
+      <div class="search-box">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="search" placeholder="Search slides…" autocomplete="off" />
       </div>
       <div id="slideList"></div>
     </div>
   </aside>
 
   <main>
-    <div class="slide" id="slide">
-      <div class="empty">
-        <b>No markdown loaded</b>
-        <span>Click “Open .md” or drag & drop a markdown file into this page.</span>
+    <div class="slide-stage">
+      <div id="slide">
+        <div class="slide-empty">
+          <div class="slide-empty-icon">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          </div>
+          <div>
+            <h3>No markdown loaded</h3>
+            <p>Click <strong>Open .md</strong> in the toolbar or drag &amp; drop a markdown file here.</p>
+          </div>
+        </div>
       </div>
     </div>
   </main>
 </div>
 
+<footer><div id="progressBar"></div></footer>
+
 <div id="dropOverlay">
-  <div class="box">
-    <b>Drop your markdown file</b>
-    <span>Release to load the presentation.</span>
+  <div class="drop-box">
+    <div class="drop-box-icon">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </div>
+    <h3>Drop your markdown file</h3>
+    <p>Release to load the presentation</p>
   </div>
 </div>
 
-<footer><div id="progressBar"></div></footer>
+<div id="keysOverlay">
+  <div class="keys-box">
+    <h3>Keyboard shortcuts</h3>
+    <div class="keys-grid">
+      <div class="key-row"><kbd>→</kbd>&nbsp;/&nbsp;<kbd>Space</kbd><span>Next slide</span></div>
+      <div class="key-row"><kbd>←</kbd><span>Previous slide</span></div>
+      <div class="key-row"><kbd>Home</kbd><span>First slide</span></div>
+      <div class="key-row"><kbd>End</kbd><span>Last slide</span></div>
+      <div class="key-row"><kbd>F</kbd><span>Fullscreen</span></div>
+      <div class="key-row"><kbd>Esc</kbd><span>Close sidebar</span></div>
+    </div>
+    <button class="keys-close" id="keysClose">Close</button>
+  </div>
+</div>
 
 <script>
-  // --------- Utilities ---------
-  function escapeHtml(s){
-    return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  }
-
-  // Split markdown into slides by H1, ignoring headings inside fenced code blocks.
-  // Supports both ``` and ~~~ fences (3+ chars), and avoids false splits inside fences.
+  // ─── Utilities ────────────────────────────────────────────────────────────────
   function splitSlides(md) {
     const lines = md.replace(/\r\n/g, "\n").split("\n");
     const slides = [];
-    let cur = [];
-    let inFence = false;
-    let fenceChar = null; // '`' or '~'
-    let fenceLen = 0;
+    let cur = [], inFence = false, fenceChar = null, fenceLen = 0;
 
-    function fenceMatch(line){
+    function fenceMatch(line) {
       const m = line.match(/^\s*([`~]{3,})(.*)$/);
-      if(!m) return null;
-      const fence = m[1];
-      return { fence, ch: fence[0], len: fence.length };
+      if (!m) return null;
+      return { ch: m[1][0], len: m[1].length };
     }
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-
+    for (const line of lines) {
       const fm = fenceMatch(line);
       if (fm) {
-        if (!inFence) {
-          inFence = true; fenceChar = fm.ch; fenceLen = fm.len;
-        } else {
-          // close only if same char and length >= opening
-          if (fm.ch === fenceChar && fm.len >= fenceLen) {
-            inFence = false; fenceChar = null; fenceLen = 0;
-          }
-        }
-        cur.push(line);
-        continue;
+        if (!inFence) { inFence = true; fenceChar = fm.ch; fenceLen = fm.len; }
+        else if (fm.ch === fenceChar && fm.len >= fenceLen) { inFence = false; fenceChar = null; fenceLen = 0; }
+        cur.push(line); continue;
       }
-
       if (!inFence && /^#\s+/.test(line)) {
         if (cur.length) slides.push(cur.join("\n").trim());
         cur = [line];
-      } else {
-        cur.push(line);
-      }
+      } else { cur.push(line); }
     }
     if (cur.length) slides.push(cur.join("\n").trim());
     return slides.filter(s => s.length > 0);
   }
 
-  // --------- State ---------
-  let slidesMd = [];
-  let titles = [];
-  let current = 0;
-  let deckLoaded = false;
+  // ─── State ────────────────────────────────────────────────────────────────────
+  let slidesMd = [], titles = [], current = 0, deckLoaded = false;
 
-  // --------- Markdown renderer ---------
-  marked.setOptions({
-    gfm: true,
-    breaks: false,
-    langPrefix: "language-" // important for highlight.js language detection
-  });
+  marked.setOptions({ gfm: true, breaks: false, langPrefix: "language-" });
 
-  function updateProgress(){
+  // ─── Render ───────────────────────────────────────────────────────────────────
+  function updateProgress() {
     const pct = slidesMd.length ? ((current + 1) / slidesMd.length) * 100 : 0;
     document.getElementById("progressBar").style.width = pct + "%";
   }
 
-  function highlightCode(){
+  function updateNavButtons() {
+    document.getElementById("btnPrev").disabled = !deckLoaded || current === 0;
+    document.getElementById("btnNext").disabled = !deckLoaded || current === slidesMd.length - 1;
+  }
+
+  function highlightCode() {
     if (!window.hljs) return;
-    document.querySelectorAll("#slide pre code").forEach((el) => {
-      try{
-        hljs.highlightElement(el); // highlight.js handles language-xxx classes and auto-detect as fallback
-      }catch(e){
-        // ignore highlighting errors; keep readable code blocks
-      }
+    document.querySelectorAll("#slide pre code").forEach(el => {
+      try { hljs.highlightElement(el); } catch (e) {}
     });
   }
 
-  function installCopyButtons(){
+  function installCopyButtons() {
     document.querySelectorAll("#slide pre").forEach(pre => {
       if (pre.querySelector(".copy-btn")) return;
       const codeEl = pre.querySelector("code");
       if (!codeEl) return;
-
       const btn = document.createElement("button");
       btn.className = "copy-btn";
       btn.textContent = "Copy";
       btn.addEventListener("click", async () => {
-        try{
+        try {
           await navigator.clipboard.writeText(codeEl.textContent);
-          btn.textContent = "Copied";
-          setTimeout(() => btn.textContent = "Copy", 900);
-        }catch{
+          btn.textContent = "Copied!";
+          setTimeout(() => btn.textContent = "Copy", 1200);
+        } catch {
           btn.textContent = "Failed";
-          setTimeout(() => btn.textContent = "Copy", 900);
+          setTimeout(() => btn.textContent = "Copy", 1200);
         }
       });
       pre.appendChild(btn);
     });
   }
 
-  function buildList(filter = ""){
-    const slideListEl = document.getElementById("slideList");
-    slideListEl.innerHTML = "";
+  function buildList(filter) {
+    const listEl = document.getElementById("slideList");
+    listEl.innerHTML = "";
     const f = (filter || "").trim().toLowerCase();
-
     titles.forEach((t, idx) => {
-      const label = `${idx+1}. ${t}`;
-      if (f && !label.toLowerCase().includes(f)) return;
-
+      if (f && !t.toLowerCase().includes(f) && !String(idx + 1).includes(f)) return;
       const btn = document.createElement("button");
-      btn.className = "slide-link";
-      btn.textContent = label;
-      btn.addEventListener("click", () => {
-        go(idx);
-        toggleSidebar(false);
-      });
-      slideListEl.appendChild(btn);
+      btn.className = "slide-link" + (idx === current ? " active" : "");
+      btn.innerHTML = `<span class="snum">${idx + 1}</span>${t}`;
+      btn.addEventListener("click", () => { go(idx); if (window.innerWidth < 860) toggleSidebar(false); });
+      listEl.appendChild(btn);
     });
   }
 
-  function render(){
+  function render() {
     const slideEl = document.getElementById("slide");
-    if (!deckLoaded || !slidesMd.length){
-      slideEl.innerHTML = `
-        <div class="empty">
-          <b>No markdown loaded</b>
-          <span>Click “Open .md” or drag & drop a markdown file into this page.</span>
-        </div>`;
+    if (!deckLoaded || !slidesMd.length) {
+      slideEl.innerHTML = `<div class="slide-empty">
+        <div class="slide-empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+        </div>
+        <div>
+          <h3>No markdown loaded</h3>
+          <p>Click <strong>Open .md</strong> in the toolbar or drag &amp; drop a markdown file here.</p>
+        </div>
+      </div>`;
       document.getElementById("slideTitle").textContent = "—";
       document.getElementById("counter").textContent = "0 / 0";
       document.getElementById("subtitle").textContent = "Open or drop a .md file";
-      updateProgress();
-      buildList("");
+      updateProgress(); updateNavButtons(); buildList("");
       return;
     }
 
+    // Re-trigger animation
+    slideEl.style.animation = "none";
+    slideEl.offsetHeight;
+    slideEl.style.animation = "";
+
     slideEl.innerHTML = marked.parse(slidesMd[current]);
-    document.getElementById("slideTitle").textContent = titles[current] || `Slide ${current+1}`;
-    document.getElementById("counter").textContent = `${current+1} / ${slidesMd.length}`;
-    document.getElementById("subtitle").textContent = `${slidesMd.length} slides loaded`;
-    updateProgress();
-    installCopyButtons();
-    highlightCode();
-
-    document.querySelectorAll(".slide-link").forEach((el, idx) => {
-      el.classList.toggle("active", idx === current);
+    document.getElementById("slideTitle").textContent = titles[current] || `Slide ${current + 1}`;
+    document.getElementById("counter").textContent = `${current + 1} / ${slidesMd.length}`;
+    document.getElementById("subtitle").textContent = `${slidesMd.length} slide${slidesMd.length !== 1 ? "s" : ""} loaded`;
+    updateProgress(); updateNavButtons(); installCopyButtons(); highlightCode();
+    document.querySelectorAll(".slide-link").forEach(el => {
+      const num = parseInt(el.querySelector(".snum")?.textContent, 10);
+      el.classList.toggle("active", num === current + 1);
     });
-
     history.replaceState(null, "", "#" + (current + 1));
   }
 
-  function go(n){
-    if(!deckLoaded) return;
+  function go(n) {
+    if (!deckLoaded) return;
     current = Math.max(0, Math.min(slidesMd.length - 1, n));
     render();
   }
 
-  // --------- Sidebar & controls ---------
-  function toggleSidebar(force){
-    const open = (typeof force === "boolean") ? force : !document.body.classList.contains("sidebar-open");
+  // ─── Sidebar ──────────────────────────────────────────────────────────────────
+  function toggleSidebar(force) {
+    const open = typeof force === "boolean" ? force : !document.body.classList.contains("sidebar-open");
     document.body.classList.toggle("sidebar-open", open);
   }
 
+  // ─── Controls ─────────────────────────────────────────────────────────────────
   document.getElementById("btnMenu").addEventListener("click", () => toggleSidebar());
   document.getElementById("btnPrev").addEventListener("click", () => go(current - 1));
   document.getElementById("btnNext").addEventListener("click", () => go(current + 1));
+  document.getElementById("search").addEventListener("input", e => buildList(e.target.value));
 
-  document.getElementById("search").addEventListener("input", (e) => buildList(e.target.value));
+  document.getElementById("btnFullscreen").addEventListener("click", () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+    else document.exitFullscreen().catch(() => {});
+  });
 
-  document.addEventListener("keydown", (e) => {
-    const k = e.key;
-    if (k === "ArrowRight" || k === "PageDown" || k === " ") { e.preventDefault(); go(current + 1); }
-    if (k === "ArrowLeft" || k === "PageUp") { e.preventDefault(); go(current - 1); }
-    if (k === "Home") { e.preventDefault(); go(0); }
-    if (k === "End") { e.preventDefault(); go(slidesMd.length - 1); }
-    if (k === "Escape") { toggleSidebar(false); }
+  const keysOverlay = document.getElementById("keysOverlay");
+  document.getElementById("btnKeys").addEventListener("click", () => keysOverlay.classList.add("visible"));
+  document.getElementById("keysClose").addEventListener("click", () => keysOverlay.classList.remove("visible"));
+  keysOverlay.addEventListener("click", e => { if (e.target === keysOverlay) keysOverlay.classList.remove("visible"); });
+
+  document.addEventListener("keydown", e => {
+    if (keysOverlay.classList.contains("visible")) {
+      if (e.key === "Escape") keysOverlay.classList.remove("visible");
+      return;
+    }
+    if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); go(current + 1); }
+    if (e.key === "ArrowLeft"  || e.key === "PageUp")                    { e.preventDefault(); go(current - 1); }
+    if (e.key === "Home") { e.preventDefault(); go(0); }
+    if (e.key === "End")  { e.preventDefault(); go(slidesMd.length - 1); }
+    if (e.key === "Escape") toggleSidebar(false);
+    if (e.key === "f" || e.key === "F") document.getElementById("btnFullscreen").click();
   });
 
   // Touch swipe
   let startX = null;
-  document.getElementById("slide").addEventListener("touchstart", (e) => { startX = e.touches[0].clientX; }, { passive:true });
-  document.getElementById("slide").addEventListener("touchend", (e) => {
+  const slideEl = document.getElementById("slide");
+  slideEl.addEventListener("touchstart", e => { startX = e.touches[0].clientX; }, { passive: true });
+  slideEl.addEventListener("touchend", e => {
     if (startX == null) return;
-    const endX = e.changedTouches[0].clientX;
-    const dx = endX - startX;
-    if (Math.abs(dx) > 60) (dx < 0) ? go(current + 1) : go(current - 1);
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 60) dx < 0 ? go(current + 1) : go(current - 1);
     startX = null;
-  }, { passive:true });
+  }, { passive: true });
 
-  // --------- Loading markdown from a file ---------
-  function loadMarkdownText(markdownText, filename = "markdown"){
+  // ─── Load markdown ────────────────────────────────────────────────────────────
+  function loadMarkdownText(markdownText, filename) {
     slidesMd = splitSlides(markdownText);
     titles = slidesMd.map((s, idx) => {
-      const m = s.match(/^#\s+(.+)$/m);
-      return m ? m[1].trim() : `Slide ${idx+1}`;
+      const m = s.match(/^#+\s+(.+)$/m);
+      return m ? m[1].trim() : `Slide ${idx + 1}`;
     });
-
     deckLoaded = true;
     current = 0;
-
-    // build list first for active state
-    buildList("");
-    // init from hash if present
     if (location.hash) {
-      const n = parseInt(location.hash.replace("#",""), 10);
-      if (!Number.isNaN(n)) current = Math.max(0, Math.min(slidesMd.length - 1, n - 1));
+      const n = parseInt(location.hash.replace("#", ""), 10);
+      if (!isNaN(n)) current = Math.max(0, Math.min(slidesMd.length - 1, n - 1));
     }
-
+    buildList("");
     render();
-    document.title = `Markdown Deck — ${filename}`;
+    document.title = `${(filename || "deck").replace(/\.md$/i, "")} — Markdown Deck`;
   }
 
   // File picker
   const fileInput = document.getElementById("fileInput");
   document.getElementById("btnOpen").addEventListener("click", () => fileInput.click());
-  fileInput.addEventListener("change", async (e) => {
-    const file = e.target.files && e.target.files[0];
+  fileInput.addEventListener("change", async e => {
+    const file = e.target.files?.[0];
     if (!file) return;
-    const text = await file.text();
-    loadMarkdownText(text, file.name);
-    // reset to allow re-picking same file
+    loadMarkdownText(await file.text(), file.name);
     fileInput.value = "";
   });
 
   // Drag & drop
-  const overlay = document.getElementById("dropOverlay");
-  function showOverlay(show){ overlay.style.display = show ? "flex" : "none"; }
-
-  window.addEventListener("dragover", (e) => {
+  const dropOverlay = document.getElementById("dropOverlay");
+  window.addEventListener("dragover", e => { e.preventDefault(); dropOverlay.classList.add("visible"); });
+  window.addEventListener("dragleave", e => { if (e.target === document.documentElement) dropOverlay.classList.remove("visible"); });
+  window.addEventListener("drop", async e => {
     e.preventDefault();
-    showOverlay(true);
-  });
-  window.addEventListener("dragleave", (e) => {
-    // if leaving window
-    if (e.target === document.documentElement) showOverlay(false);
-  });
-  window.addEventListener("drop", async (e) => {
-    e.preventDefault();
-    showOverlay(false);
-
+    dropOverlay.classList.remove("visible");
     const file = e.dataTransfer?.files?.[0];
     if (!file) return;
     const name = (file.name || "").toLowerCase();
@@ -574,21 +727,18 @@
       alert("Please drop a .md (markdown) file.");
       return;
     }
-    const text = await file.text();
-    loadMarkdownText(text, file.name);
+    loadMarkdownText(await file.text(), file.name);
   });
 
-  // Optional: fetch markdown via URL query (?src=slides.md). Works when served via http(s).
-  async function tryFetchFromQuery(){
-    const p = new URLSearchParams(location.search);
-    const src = p.get("src");
-    if(!src) return;
-    try{
+  // Optional: ?src= query param
+  async function tryFetchFromQuery() {
+    const src = new URLSearchParams(location.search).get("src");
+    if (!src) return;
+    try {
       const res = await fetch(src, { cache: "no-store" });
-      if(!res.ok) throw new Error("HTTP " + res.status);
-      const text = await res.text();
-      loadMarkdownText(text, src.split("/").pop() || src);
-    }catch(err){
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      loadMarkdownText(await res.text(), src.split("/").pop() || src);
+    } catch (err) {
       console.warn("Failed to fetch src:", err);
     }
   }
